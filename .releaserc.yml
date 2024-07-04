@@ -10,4 +10,4 @@ plugins:
 branches:
   - "main"
   - "fix-helm-release-ci"
-  - "refs/tags/v([0-9]\\.*)*(?<!\\.)$"
+  - "refs\/tags\/v([0-9]\\.*)*(?<!\\.)$"
