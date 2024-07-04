@@ -1,7 +1,7 @@
 plugins:
   - "@semantic-release/commit-analyzer"
-  - - "semantic-release-helm"
-    - chartPath: './'
+  - - "semantic-release-helm3"
+    - chartPath: './charts/dragonfly-operator'
       onlyUpdateVersion: true
   - - "@semantic-release/git"
     - assets:
@@ -11,4 +11,4 @@ branches:
   - "main"
   - "fix-helm-release-ci"
   # - "refs\/tags\/v([0-9]\.*)*(?<!\.)$"
-  - "refs/tags/v0.1.12"
+  # - "refs/tags/v0.1.12"
