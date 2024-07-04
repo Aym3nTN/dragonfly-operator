@@ -38,6 +38,7 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: "semantic-release:*"
         with:
           # You can specify specifying version range for the extra plugins if you prefer.
           extra_plugins: |
