@@ -7,15 +7,13 @@ on:
     branches: [main]
   workflow_dispatch:
   push:
-    branches: [main]
-    tags:
-      - v*
+    branches: [main, fix-helm-chart-release-ci]
 
 jobs:
   build-operator:
     runs-on: ubuntu-latest
     env:
-      IMG: ghcr.io/dragonflydb/operator:${{ github.sha }}
+      IMG: ghcr.io/aym3ntn/operator:${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v3
@@ -49,7 +47,7 @@ jobs:
     needs: build-operator
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     env:
-      IMG: ghcr.io/dragonflydb/operator:${{ github.ref_name }}
+      IMG: ghcr.io/aym3ntn/operator:${{ github.ref_name }}
       VERSION: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
@@ -73,13 +71,44 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install helm
+        uses: azure/setup-helm@v4
+
+      - name: Update helm chart
+        run: |
+          git checkout main
+          sed -Ei \
+           -e 's/^(version\:) .*/\1 '${{ env.VERSION }}'/g' \
+           -e 's/^(appVersion\:) .*/\1 "'${{ env.VERSION }}'"/g' \
+           charts/dragonfly-operator/Chart.yaml          
+          
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"          
+
+          git commit \
+          -m 'chore(helm-chart): update to ${{ env.VERSION }}' \
+          charts/dragonfly-operator/Chart.yaml
+
+          git push
+      - name: Push Helm chart as OCI to Github
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+          helm registry login -u ${{ github.actor }} --password-stdin ghcr.io
+          
+          helm package charts/dragonfly-operator
+          
+          # Lowercase the repository name when running this job in forked repos
+          REPOSITORY=$(echo ${{ github.repository }} | tr '[A-Z]' '[a-z]')
+
+          helm push dragonfly-operator-${{ env.VERSION }}.tgz oci://ghcr.io/$REPOSITORY/helm
+
       - name: Build and Publish image into GHCR
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/dragonflydb/operator:${{ github.ref_name }}
+          tags: ghcr.io/aym3ntn/operator:${{ github.ref_name }}
           platforms: |
             linux/amd64
             linux/arm64
@@ -99,5 +128,5 @@ jobs:
           body: |
             Release ${{ github.ref_name }}
 
-            Docker image: ghcr.io/dragonflydb/operator:${{ github.ref_name }}
+            Docker image: ghcr.io/aym3ntn/operator:${{ github.ref_name }}
           draft: true
