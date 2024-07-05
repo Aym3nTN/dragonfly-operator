@@ -45,7 +45,7 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     needs: build-operator
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push')
     env:
       IMG: ghcr.io/aym3ntn/operator:${{ github.ref_name }}
       VERSION: ${{ github.ref_name }}
