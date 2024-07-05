@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main, fix-helm-chart-release-ci]
-
+    tags:
+    - v*
 jobs:
   build-operator:
     runs-on: ubuntu-latest
